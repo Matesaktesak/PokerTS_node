@@ -9,7 +9,7 @@ export default class Card{
     private name: string;
     private shortname: string;
 
-    public collection: CardCollection;
+    public collection: CardCollection | null = null;
 
     public constructor(value: number, suit: Suit, collection?: CardCollection){
         if(value < 1 || value > 14) throw `Invalid value! (${value})`;
@@ -42,6 +42,10 @@ export default class Card{
         return out;
     }
 
+    public getValue(): number { return this.value; }    // Value getter
+    public setValue(v: number): Card { this.value = v; return this; }    // Value getter
+    public getSuit(): Suit { return this.suit; }    // Value getter
+
     public toString(): string{ return this.name; }      // toString method "override"
 
     public setCollection(collection: CardCollection): Card {    // Collection setter
@@ -49,5 +53,5 @@ export default class Card{
         return this;
     }
 
-    public getCollection(): CardCollection { return this.collection; }  // Collection getter
+    public getCollection(): CardCollection | null { return this.collection; }  // Collection getter
 }

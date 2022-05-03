@@ -1,10 +1,11 @@
 import Card from "./Card";
 
+
 export default class Suit{
     private color: string = "Red" || "Black";
-    private name: string;
-    private suit: string = 'C' || 'H' || 'S' || 'D';
-    public card: Card;
+    private name: string = "Clubs" || "Hearts" || "Spades" || "Diamonds";
+    private suit: string = '';//'C' || 'H' || 'S' || 'D';
+    public card: Card | null = null;
 
     public constructor(suit: string | number){
         if(typeof suit == "string") this.suit = suit.charAt(0);
@@ -44,4 +45,6 @@ export default class Suit{
     public getSuit(): string {
         return this.suit;
     }
+
+    public static suitSymbols: string[] = ["Clubs", "Hearts", "Spades", "Diamonds"];
 }
