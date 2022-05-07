@@ -1,31 +1,29 @@
-import WebSocket, { WebSocketServer } from "ws";
-import queryString from "query-string";
+import { WebSocketServer } from "ws";
+import { parse }from "url";
+import { println } from "../app";
+import { IncomingMessage } from "http";
 
 export default async (websrv: any) => {
-    const ws : WebSocketServer= new WebSocket.Server({
-        noServer: true,
-        path: "/websockets",
+    const wss : WebSocketServer = new WebSocketServer({ noServer: true });
+
+    wss.on("connection", (ws: any, req: IncomingMessage) => {
+        println("Connection from", req.url);
+
+        ws.on("message", (msg: any) => {
+            const parsedMsg = JSON.parse(msg);
+            println(JSON.stringify(parsedMsg));
+            //for(let i: number = 0; i < 5; i++) ws.send(JSON.stringify({message: msg, number: i}));
+        });
     });
 
     websrv.on("upgrade", (req: any, soc: any, head: any) => {
-        ws.handleUpgrade(req, soc, head, (websocket: any) => {
-            websocket.emit("connection", websocket, req);
-        });
-    });
-    console.log(ws);
+        const {pathname} = parse(req.url);
+        println("Incoming WS request on:", pathname);
 
-    ws.on("connection", (con: any, req: any) => {
-        const [path, params] = req?.url?.split("?");
-        const connectionParams = queryString.parse(params);
-        console.log("connection");
-        console.log(connectionParams);
-
-        con.on("message", (msg: any) => {
-            const parsedMsg = JSON.parse(msg);
-            console.log(parsedMsg);
-            con.send(JSON.stringify({"message": msg}));
-        });
+        if(pathname === "/protocol") wss.handleUpgrade(req, soc, head, (websocket: any) => {
+            wss.emit("connection", websocket, req);
+        }); else soc.destroy();
     });
 
-    return ws;
+    return wss;
 }

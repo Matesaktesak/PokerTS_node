@@ -10,8 +10,11 @@ export default class Player implements CardCollection{
     public bet: number;
     public name: string;
     public matches: CardMatch[];
+    public con: WebSocket;
 
-    public constructor(name: string = "", money: number = 0, cards?: Card[]){
+    public constructor(socket: WebSocket, name: string = "", money: number = 0, cards?: Card[]){
+        this.con = socket;
+        
         this.name = name;
         this.money = money;
         this.bet = 0;
