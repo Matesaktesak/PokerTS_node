@@ -12,6 +12,43 @@ export function println(...items: any) {
     console.log(out);
 }
 
+
+
+import express from "express";
+//import api from "./api";
+//import middleware from "./middleware";
+import websockets from './websockets';
+
+const app = express();
+const port: number = Number(process.env.PORT) || 8080;
+
+//middleware(app);
+//api(app);
+
+/*
+app.get("/", (req: any, res: any, next: any) => {
+    res.send("hey!");
+});
+*/
+//app.get("/websockets", (req: any, res: any, next: any) => {
+
+//});
+
+
+const server = app.listen(port, () => {
+    if (process.send) {
+        process.send(`Server running at http://localhost:${port}\n\n`);
+    }
+});
+
+websockets(server);
+
+process.on("message", (message) => {
+    console.log(message);
+});
+
+
+/*
 let c1: Card = new Card(3, new Suit('H'));
 let c2: Card = new Card(3, new Suit('S'));
 let c3: Card = new Card(3, new Suit('H'));
@@ -23,3 +60,4 @@ let c7: Card = new Card(6, new Suit('S'));
 let myDeck: Deck = new Deck(c1, c2, c3, c4, c5, c6, c7);
 myDeck.shuffle();
 println("\n", CardMatch.match(myDeck));
+*/
