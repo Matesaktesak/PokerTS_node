@@ -8,11 +8,28 @@ export let VERBOSE = true; // process.env.VERBOSE;
 
 export function println(...items: any) {
     let out: string = "";
-    for (let item of items) out += typeof item != "string" ? item.toString() : item + " ";
+    for (let item of items) out += (typeof(item) != "string" ? item.toString() : item) + " ";
     console.log(out);
 }
 
+/*
+async function getPost(req: Request){
+    let postdata: string = "";
+    req.on("data", (chunk) => {
+        postdata += chunk.toString();
+        if (postdata.length > 1e3) req.socket.destroy(); // Prevent requests over 1kB
+    });
 
+    let post: ParsedQs;
+    req.on("end", () => {
+        post = qs.parse(postdata);
+        if (VERBOSE) console.log("New post arrived:" + JSON.stringify(post));
+
+    });
+
+    return post;
+}
+*/
 
 import express from "express";
 import { Request, Response, NextFunction } from "express";
@@ -21,6 +38,10 @@ import { Request, Response, NextFunction } from "express";
 import websockets from './websockets';
 import Poker from "./modules/Poker";
 import { parse } from "url";
+import PokerGame from "./modules/Poker";
+import fs from "fs";
+import qs, { ParsedQs } from "qs";
+import Player from "./modules/Player";
 
 const app = express();
 app.disable('query parser');
@@ -39,30 +60,58 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 //app.get("/websockets", (req: any, res: any, next: any) => {
 
 //});
-let games: Poker[] = new Array<Poker>();
+let games: PokerGame[] = new Array<PokerGame>();
 
-app.get("/progress", (req: Request, res: Response, next: NextFunction) => {
-    const gameID = req.params;
-    console.log(req.query.gameID);
+app.get("/progress", async (req: Request, res: Response, next: NextFunction) => {
+    let postdata: string = "";
+    req.on("data", (chunk) => {
+        postdata += chunk.toString();
+        if (postdata.length > 1e3) req.socket.destroy(); // Prevent requests over 1kB
+    });
 
-    try{
-        games[req.query.gameID].progress();
-    }catch{
-        println("No game with this ID...");
-    }
+    let post: ParsedQs;
+    req.on("end", () => {
+        post = qs.parse(postdata);
 
-    res.sendStatus(200);
+        let game = games.find((element) => element.id() == post.gameId);
+        if(game) game.progress(); else println("No game with this ID...");
 
-    next();
+        res.status(200).send(JSON.stringify({gameId: game?.id(), gameState: game?.state()}));
+    });
+
+    
+    //next();
 });
 
-app.post("/newgame", (req: Request, res: Response, next: NextFunction) => {
-    games.push(new Poker(games.length));
+app.post("/newgame", async (req: Request, res: Response, next: NextFunction) => {
+    let postdata: string = "";
+    req.on("data", (chunk) => {
+        postdata += chunk.toString();
+        if (postdata.length > 1e3) req.socket.destroy(); // Prevent requests over 1kB
+    });
 
-    //res.sendStatus(200);
-    res.send("New gameID:" + games.length);
+    let post: ParsedQs;
+    req.on("end", () => {
+        post = qs.parse(postdata);
+        let id = PokerGame.makeid();
+        if (typeof post.gameId == "string") id = post.gameId;
 
-    next();
+        while (games.find((element) => element.id() == id)) id = PokerGame.makeid();
+        games.push(new PokerGame(id).start());
+
+        res.status(200).send(JSON.stringify({ gameId: id }));
+
+        next();
+    });
+});
+
+app.post("/join/:id", async(req: Request, res: Response, next: NextFunction) => {
+    let id = req.params["id"];
+    let game = games.find((element) => element.id() === id);
+    game?.addPlayer(new Player(game));
+    //println("Player joined game", id);
+
+    res.sendStatus(200);
 });
 
 const server = app.listen(port, () => {
@@ -71,7 +120,16 @@ const server = app.listen(port, () => {
     }
 });
 
-websockets(server);
+websockets(server, games);
+
+
+
+
+
+
+
+
+
 
 /*
 let c1: Card = new Card(3, new Suit('H'));
@@ -86,3 +144,4 @@ let myDeck: Deck = new Deck(c1, c2, c3, c4, c5, c6, c7);
 myDeck.shuffle();
 println("\n", CardMatch.match(myDeck));
 */
+

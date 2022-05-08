@@ -2,16 +2,21 @@ import Card from "./Card";
 import CardCollection from "./CardCollection";
 import Deck from "./Deck";
 import { println, VERBOSE} from "../app";
+import PokerGame from "./Poker";
+import { PokerProtocolStatus } from "../websockets";
 
-type Deal = "Start" | "HandOut" | "Flop" | "Turn" | "River" | "Showdown";
+type Deal = "Start" | "HandOut" | "Flop" | "Turn" | "River" | "Showdown"; // Essential game state - one of: "Start", "HandOut", "Flop", "Turn", "River", "Showdown"
 
 export default class Community implements CardCollection{
     public cards: Card[] = new Array<Card>();
     public deal: Deal;
+    public game: PokerGame;
 
     public money: number;
 
-    public constructor(cards?: Card[]){
+    public constructor(game: PokerGame, cards?: Card[]){
+        this.game = game;
+
         if (typeof cards != "undefined") this.cards.push(...cards);
         this.money = 0;
         this.deal = "Start";
@@ -74,6 +79,16 @@ export default class Community implements CardCollection{
         let c: Card = deck.popCardIndex(0);
         this.cards.push(c);
         this.assignCards();
+
+        let message: PokerProtocolStatus = {
+            action: "update",
+            pot: this.game.pot(),
+            cards: []
+        }
+
+        for(let c of this.cards) message.cards?.push({value: c.getValue(), suit: c.getSuit().getName()});
+
+        for(let player of this.game.getPlayers()) player.socket?.send(JSON.stringify(message));
 
         if (VERBOSE) println("The card", c, "has been moved from ", deck, "to", this);
     }

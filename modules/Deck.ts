@@ -16,6 +16,11 @@ export default class Deck implements CardCollection{
         }
     }
 
+    public flush(): Deck{
+        this.cards = new Array<Card>();
+        return this;
+    }
+
     public shuffle(): Deck{
         this.cards.sort(() => 10*(Math.random()-0.5));
         return this;
