@@ -46,6 +46,8 @@ import Player from "./modules/Player";
 const app = express();
 app.disable('query parser');
 app.use(express.query({}));
+app.engine('.html', require('ejs').__express);  // Rendering
+app.set('view engine', 'html');
 
 const port: number = Number(process.env.PORT) || 8080;
 
@@ -103,6 +105,17 @@ app.post("/newgame", async (req: Request, res: Response, next: NextFunction) => 
 
         next();
     });
+});
+
+app.get("/newgame", async (req: Request, res: Response, next: NextFunction) => {
+    let id = PokerGame.makeid();
+
+    while (games.find((element) => element.id() == id)) id = PokerGame.makeid();
+    games.push(new PokerGame(id).start());
+
+    res.render("newgame", {gameId: id});
+
+    next();
 });
 
 app.post("/join/:id", async(req: Request, res: Response, next: NextFunction) => {

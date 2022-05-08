@@ -16,6 +16,7 @@ export type PokerProtocolMessage = {
 
 export type PokerProtocolStatus = {
     action: string,
+    description?: string,
     money?: number,
     cards?: object[],
     pot?: number
