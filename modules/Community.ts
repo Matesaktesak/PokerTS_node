@@ -83,10 +83,10 @@ export default class Community implements CardCollection{
         let message: PokerProtocolStatus = {
             action: "update",
             pot: this.game.pot(),
-            cards: []
+            community: []
         }
 
-        for(let c of this.cards) message.cards?.push({value: c.getValue(), suit: c.getSuit().getName()});
+        for(let c of this.cards) message.community?.push({value: c.getValue(), suit: c.getSuit().getName()});
 
         for(let player of this.game.getPlayers()) player.socket?.send(JSON.stringify(message));
 
