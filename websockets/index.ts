@@ -19,6 +19,7 @@ export type PokerProtocolStatus = {
     description?: string,
     money?: number,
     cards?: object[],
+    community?: object[],
     pot?: number
 }
 
