@@ -1,9 +1,10 @@
-import Deck from "./modules/Deck";
 import * as dotenv from "dotenv";
+dotenv.config();
+
+import Deck from "./modules/Deck";
 import Card from "./modules/Card";
 import Suit from "./modules/Suit";
 import CardMatch from "./modules/CardMatch";
-dotenv.config();
 export let VERBOSE = true; // process.env.VERBOSE;
 
 export function println(...items: any) {
@@ -32,12 +33,11 @@ async function getPost(req: Request){
 */
 
 import express from "express";
-import { Request, Response, NextFunction } from "express";
-//import api from "./api";
+import { Router, Request, Response, NextFunction } from "express";
+import api from "./api";
 //import middleware from "./middleware";
 import websockets from './websockets';
 import Poker from "./modules/Poker";
-import { parse } from "url";
 import PokerGame from "./modules/Poker";
 import fs from "fs";
 import qs, { ParsedQs } from "qs";
@@ -54,17 +54,23 @@ const port: number = Number(process.env.PORT) || 8080;
 //middleware(app);
 //api(app);
 
+let games: PokerGame[] = new Array<PokerGame>();
 
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
     res.send(`<a href="/progress">Progress</a>`);
 });
 
-//app.get("/websockets", (req: any, res: any, next: any) => {
+app.get("/listgames", async (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).set("Content-Type", "text/json").send(JSON.stringify(games.map((game: PokerGame) => {return {
+        gameId: game.id(),
+        currentPlayers: game.playerCount(),
+        maxPlayers: game.getMaxPlayers(),
+    }})));
 
-//});
-let games: PokerGame[] = new Array<PokerGame>();
+    next();
+});
 
-app.get("/progress", async (req: Request, res: Response, next: NextFunction) => {
+app.put("/progress", async (req: Request, res: Response, next: NextFunction) => {
     let postdata: string = "";
     req.on("data", (chunk) => {
         postdata += chunk.toString();
@@ -79,10 +85,9 @@ app.get("/progress", async (req: Request, res: Response, next: NextFunction) => 
         if(game) game.progress(); else println("No game with this ID...");
 
         res.status(200).send(JSON.stringify({gameId: game?.id(), gameState: game?.state()}));
-    });
 
-    
-    //next();
+        next();
+    });
 });
 
 app.post("/newgame", async (req: Request, res: Response, next: NextFunction) => {
@@ -128,16 +133,16 @@ app.post("/join/:id", async(req: Request, res: Response, next: NextFunction) => 
 });
 
 const server = app.listen(port, () => {
-    if (process.send) {
-        process.send(`Server running at http://localhost:${port}\n\n`);
-    }
+    if(VERBOSE) println(`Listening on ${port}`);
 });
 
 websockets(server, games);
 
 
 
-
+for(let i = 0; i<5; i++){
+    games.push(new PokerGame("Test" + i).start());
+}
 
 
 
