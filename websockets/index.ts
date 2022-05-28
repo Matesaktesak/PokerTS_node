@@ -34,7 +34,7 @@ export default async (websrv: Server, games: PokerGame[]) => {
             //println(JSON.stringify(parsedMsg));
 
             let game: PokerGame | undefined = games.find((element) => element.id() == parsedMsg.gameId);
-            if(game == undefined) throw new Error("No such game!");
+            if(game == undefined) throw new Error(`No such game! (${parsedMsg.gameId})`);
 
             let args = parsedMsg.args;
             if(VERBOSE) println("Incoming WS args:", JSON.stringify(args));
