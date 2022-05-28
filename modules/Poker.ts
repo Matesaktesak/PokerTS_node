@@ -9,13 +9,15 @@ import WebSocket from "ws";
 export default class PokerGame{
     private gameId: string;
     private players: Player[] = new Array<Player>();
+    private maxPlayers: number = 10;
+
     private community: Community;
     private deck: Deck;
 
     public active: Player | null = null;
 
     constructor(gameId: string){
-        this.gameId = gameId;
+        this.gameId = gameId.toLowerCase();
         this.community = new Community(this);
         this.deck = new Deck();
 
@@ -69,6 +71,14 @@ export default class PokerGame{
         return this.active;
     }
 
+    public playerCount(): number { return this.players.length; }
+    public getMaxPlayers(): number { return this.maxPlayers; }
+    public setMaxPlayers(c: number): number {
+        this.maxPlayers = c;
+        return this.maxPlayers;
+    }
+
+
     public progress(): PokerGame{
         if(VERBOSE) println("Game", this.gameId, "has progressed");
 
@@ -103,7 +113,7 @@ export default class PokerGame{
 
     private bet(): PokerGame{
         this.active = this.players[0];
-        this.active.startBet();
+        this.active?.startBet();
         return this;
     }
 
